@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Acknowledgment Form</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #d32f2f; --primary-hover: #b71c1c; --border-color: #ced4da;
+            --focus-ring-color: rgba(211, 47, 47, 0.2); --body-bg: #f4f7f9; --form-bg: #ffffff;
+            --text-color-dark: #212529; --text-color-light: #6c757d; --success-color: #28a745;
+            --error-color: #dc3545; --warning-color: #ffc107;
+            
+            /* Dark mode variables */
+            --dark-body-bg: #1a1a1a; --dark-form-bg: #2d2d2d; --dark-text-color: #e9ecef;
+            --dark-border-color: #495057; --dark-focus-ring: rgba(211, 47, 47, 0.3);
+        }
+        
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: var(--dark-body-bg);
+            color: var(--dark-text-color);
+        }
+        
+        body.dark-mode .form-container {
+            background-color: var(--dark-form-bg);
+        }
+        
+        body.dark-mode .input-group input,
+        body.dark-mode .input-group select,
+        body.dark-mode .input-group textarea {
+            border-color: var(--dark-border-color);
+            background-color: var(--dark-form-bg);
+            color: var(--dark-text-color);
+        }
+        
+        body.dark-mode .input-group label {
+            background-color: var(--dark-form-bg);
+            color: var(--dark-text-color);
+        }
+        
+        body.dark-mode .input-group input:focus,
+        body.dark-mode .input-group select:focus,
+        body.dark-mode .input-group textarea:focus {
+            box-shadow: 0 0 0 3px var(--dark-focus-ring);
+        }
+        
+        body.dark-mode .section-divider::before,
+        body.dark-mode .section-divider::after {
+            border-bottom-color: var(--dark-border-color);
+        }
+        
+        body.dark-mode .acknowledgment li {
+            color: var(--dark-text-color);
+        }
+        
+        body.dark-mode .signature-pad-wrapper {
+            border-color: var(--dark-border-color);
+        }
+        
+        body.dark-mode .btn-secondary {
+            background-color: #495057;
+            color: var(--dark-text-color);
+        }
+        
+        body.dark-mode .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+        
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif; background-color: var(--body-bg); color: var(--text-color-dark);
+            margin: 0; padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .form-container {
+            background-color: var(--form-bg); padding: 2rem; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07); width: 100%; max-width: 900px;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        
+        /* Header with theme toggle */
+        header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid #e9ecef; padding-bottom: 1.25rem; margin-bottom: 1.5rem; 
+            position: relative;
+        }
+        header h1 { font-size: 1.4rem; font-weight: 600; color: var(--primary-color); margin: 0; }
+        header img { max-height: 45px; }
+        
+        .theme-toggle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-color-light);
+            transition: color 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            color: var(--primary-color);
+        }
+        
+        /* Form sections */
+        .section-divider { display: flex; align-items: center; text-align: center; margin: 1.75rem 0 1.25rem 0; }
+        .section-divider::before, .section-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e9ecef; }
+        .section-divider:not(:empty)::before { margin-right: .5em; }
+        .section-divider:not(:empty)::after { margin-left: .5em; }
+        .section-divider span { font-size: 0.9rem; font-weight: 600; color: var(--text-color-light); }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.5rem; }
+        .grid-span-2 { grid-column: 1 / -1; }
+        
+        /* Form inputs */
+        .input-group { position: relative; margin-bottom: 0.5rem; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s; background-color: transparent;
+        }
+        .input-group label {
+            position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); background: var(--form-bg);
+            padding: 0 0.25rem; color: var(--text-color-light); transition: all 0.2s ease-in-out; pointer-events: none; font-size: 0.9rem;
+        }
+        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
+            outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--focus-ring-color);
+        }
+        .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
+        .input-group select:focus + label, .input-group select:valid + label,
+        .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label {
+            top: 0; transform: translateY(-50%) scale(0.8); color: var(--primary-color); font-weight: 600;
+        }
+        label.required::after { content: ' *'; color: var(--primary-color); }
+        
+        /* Validation styles */
+        .input-group.error input, 
+        .input-group.error select, 
+        .input-group.error textarea {
+            border-color: var(--error-color);
+        }
+        
+        .input-group.success input, 
+        .input-group.success select, 
+        .input-group.success textarea {
+            border-color: var(--success-color);
+        }
+        
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
+        .input-group.error .error-message {
+            display: block;
+        }
+        
+        /* Checkbox group */
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; padding: 0.5rem 0; }
+        .checkbox-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
+        
+        /* Acknowledgment section */
+        .acknowledgment ul { list-style-type: none; padding-left: 0; margin: 0.5rem 0 1rem 0; font-size: 0.8rem; }
+        .acknowledgment li { position: relative; padding-left: 20px; margin-bottom: 6px; line-height: 1.5; color: var(--text-color-light); }
+        .acknowledgment li::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary-color); position: absolute; left: 0; top: 2px; }
+        
+        /* Signature pad */
+        .signature-pad-wrapper { position: relative; border: 1px solid var(--border-color); border-radius: 6px; height: 100px; margin-top: 0.5rem; }
+        .signature-pad { width: 100%; height: 100%; }
+        .clear-signature { position: absolute; top: 4px; right: 8px; font-size: 0.75rem; background: none; border: none; cursor: pointer; color: #6c757d; }
+        .signature-error { color: var(--error-color); font-size: 0.75rem; margin-top: 0.25rem; display: none; }
+        
+        /* Form actions */
+        .form-actions { margin-top: 1.75rem; display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #e9ecef; padding-top: 1.25rem; }
+        button { border: none; padding: 0.6rem 1.25rem; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .btn-primary { background-color: var(--primary-color); color: #ffffff; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: #e9ecef; color: var(--text-color-dark); }
+        .btn-secondary:hover { background-color: #dee2e6; }
+        
+        /* Success message */
+        #success-message { display: none; text-align: center; padding: 2rem; background-color: #f0fdf4; border: 1px solid #a7f3d0; border-radius: 8px; color: #166534; }
+        
+        /* Confirmation modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--form-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) { 
+            .form-grid { grid-template-columns: 1fr; } 
+            .form-actions {
+                flex-direction: column;
+            }
+            .checkbox-group {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+        }
+        
+        /* Print styles */
+        @media print {
+            @page { size: A4 portrait; margin: 1.2cm; }
+            body { 
+                background: #fff; padding: 0; margin: 0; 
+                font-size: 10pt;
+                color: #000; 
+            }
+            .form-container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+            header { padding-bottom: 8pt; margin-bottom: 12pt; } 
+            header h1 { font-size: 16pt; }
+            header img { max-height: 35px; }
+            
+            /* Hide theme toggle in print */
+            .theme-toggle { display: none; }
+
+            .section-divider { margin: 12pt 0 10pt 0; } 
+            .section-divider span { font-size: 9pt; }
+            
+            .form-grid { 
+                grid-template-columns: 1fr 1fr;
+                gap: 8pt 12pt; 
+            }
+            
+            .input-group label {
+                font-size: 8.5pt;
+                background: #fff; 
+                padding: 0 2px;
+                top: 0;
+                transform: translateY(-50%) scale(0.8);
+                color: #000;
+            }
+            
+            input, select, textarea { 
+                padding: 4pt; 
+                font-size: 10pt;
+                border-radius: 2px;
+                border: 1px solid #666;
+                background-color: #fff !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .checkbox-group {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 4pt;
+                padding: 0;
+            }
+            
+            .acknowledgment ul { column-count: 2; column-gap: 15pt; margin: 4pt 0 8pt 0; }
+            .acknowledgment li { 
+                font-size: 8.5pt;
+                line-height: 1.3; 
+            }
+            
+            .signature-pad-wrapper { 
+                height: 60px; 
+                border: 1px solid #666;
+            }
+            
+            /* Hide interactive elements */
+            .form-actions, .clear-signature, .acknowledgment li::before, 
+            .theme-toggle, .error-message, .signature-error { 
+                display: none; 
+            }
+            
+            /* Replace FontAwesome icon with a standard bullet point for print */
+            .acknowledgment li { 
+                list-style-type: disc; 
+                padding-left: 12pt; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <header>
+            <h1>Asset Acknowledgment</h1>
+            <img src="https://i.ibb.co/pvvsMy1X/Wurth-Gulf-CMYK-PNG-01.png" alt="WURTH Logo">
+            <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
+                <i class="fa-solid fa-moon"></i>
+            </button>
+        </header>
+
+        <div id="acknowledgment-form">
+            <form id="asset-form">
+                <div class="form-grid">
+                    
+                    <!-- ISSUANCE DETAILS SECTION -->
+                    <div class="section-divider grid-span-2"><span>Issuance Details</span></div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="employee-name" placeholder=" " required>
+                        <label for="employee-name" class="required">Employee Name</label>
+                        <div class="error-message">Please enter your full name</div>
+                    </div>
+                    
+                    <!-- ADDED: Employee No Field -->
+                    <div class="input-group">
+                        <input type="text" id="employee-no" placeholder=" " required>
+                        <label for="employee-no" class="required">Employee No</label>
+                        <div class="error-message">Please enter your employee number</div>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="date" id="receiving-date" required>
+                        <label for="receiving-date" class="required">Receiving Date</label>
+                        <div class="error-message">Please select a valid date</div>
+                    </div>
+                    
+                    <!-- ASSET DETAILS SECTION - REORDERED -->
+                    <div class="section-divider grid-span-2"><span>Asset Details</span></div>
+                    
+                    <!-- 1. Device Type -->
+                    <div class="input-group">
+                        <select id="device-type" required>
+                            <option value="" disabled selected></option>
+                            <option value="Phone">Phone</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Laptop">Laptop</option>
+                            <option value="Hotspot">Mobile Hotspot</option>
+                        </select>
+                        <label for="device-type" class="required">Device Type</label>
+                        <div class="error-message">Please select a device type</div>
+                    </div>
+
+                    <!-- 2. Make & Model -->
+                    <div class="input-group">
+                        <input type="text" id="make-model" placeholder=" " required>
+                        <label for="make-model" class="required">Make & Model</label>
+                        <div class="error-message">Please enter the device make and model</div>
+                    </div>
+
+                    <!-- 3. Phone Number -->
+                    <div class="input-group">
+                        <input type="text" id="phone-number" placeholder=" ">
+                        <label for="phone-number">Phone Number</label>
+                    </div>
+
+                    <!-- 4. Asset Tag / ID -->
+                    <div class="input-group">
+                        <input type="text" id="asset-tag" placeholder=" ">
+                        <label for="asset-tag">Asset Tag / ID</label>
+                    </div>
+
+                    <!-- 5. IMEI Number -->
+                    <div class="input-group">
+                        <input type="text" id="imei" placeholder=" " required>
+                        <label for="imei" class="required">IMEI Number</label>
+                        <div class="error-message">Please enter a valid IMEI number</div>
+                    </div>
+
+                    <!-- 6. Serial Number -->
+                    <div class="input-group">
+                        <input type="text" id="serial-number" placeholder=" " required>
+                        <label for="serial-number" class="required">Serial Number</label>
+                        <div class="error-message">Please enter the serial number</div>
+                    </div>
+                    
+                    <div class="grid-span-2">
+                        <div class="section-divider"><span>Included Accessories</span></div>
+                        <div class="checkbox-group">
+                            <div class="checkbox-item"><input type="checkbox" id="acc-charger-cable"><label for="acc-charger-cable">Charger Cable</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="acc-power-adapter"><label for="acc-power-adapter">Power Adapter</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="acc-case"><label for="acc-case">Protective Case</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="acc-sim"><label for="acc-sim">SIM Card</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="acc-headphones"><label for="acc-headphones">Headphones</label></div>
+                            <div class="checkbox-item"><input type="checkbox" id="acc-stylus"><label for="acc-stylus">Stylus</label></div>
+                        </div>
+                    </div>
+
+                    <!-- Description/Notes Section -->
+                    <div class="grid-span-2">
+                        <div class="section-divider"><span>Additional Notes</span></div>
+                        <div class="input-group">
+                            <textarea id="description" placeholder=" " rows="4"></textarea>
+                            <label for="description">Description / Custom Notes</label>
+                        </div>
+                    </div>
+
+                    <div class="acknowledgment grid-span-2">
+                        <div class="section-divider"><span>Employee Acknowledgment</span></div>
+                        <ul>
+                            <li><strong>Security:</strong> I will secure this device with a strong PIN/password and will not leave it unattended.</li>
+                            <li><strong>Acceptable Use:</strong> I will use this device primarily for business purposes per company policy.</li>
+                            <li><strong>Data Usage:</strong> I will be mindful of mobile data consumption and obtain pre-approval for international roaming.</li>
+                            <li><strong>Reporting Loss/Theft:</strong> I will report the loss or theft of this device to my manager and IT immediately.</li>
+                            <li><strong>Responsibility:</strong> I am responsible for the physical care of the device and may be liable for costs due to negligence.</li>
+                            <li><strong>Return Policy:</strong> I will return the device and all accessories upon request or at the end of my employment.</li>
+                        </ul>
+                        <label for="employee-signature-issue" class="required" style="font-weight:600; font-size: 0.9rem;">Employee Signature</label>
+                        <div class="signature-pad-wrapper">
+                            <canvas id="signature-pad-issue" class="signature-pad"></canvas>
+                            <button type="button" class="clear-signature" data-pad="issue">Clear</button>
+                        </div>
+                        <div class="signature-error" id="signature-error">Please provide your signature to acknowledge receipt</div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" id="clear-form-btn">Clear Form</button>
+                    <button type="button" class="btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i>Print</button>
+                    <button type="submit" class="btn-primary" id="submit-btn"><i class="fa-solid fa-check"></i>Submit Form</button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="success-message">
+            <h2><i class="fa-solid fa-check-circle"></i> Submission Complete</h2>
+            <p>Your mobile asset acknowledgment has been successfully recorded.</p>
+            <button class="btn-primary" id="new-form-btn"><i class="fa-solid fa-plus"></i>Create New Form</button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmation-modal">
+        <div class="modal-content">
+            <h3>Confirm Submission</h3>
+            <p>Are you sure you want to submit this form? Please review all information before proceeding.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="cancel-submit">Cancel</button>
+                <button class="btn-primary" id="confirm-submit">Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = themeToggle.querySelector('i');
+            
+            // Check for saved theme preference or default to light mode
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            }
+            
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                    localStorage.setItem('theme', 'light');
+                }
+            });
+
+            // Set current date as default
+            const receivingDateInput = document.getElementById('receiving-date');
+            if (receivingDateInput) {
+                receivingDateInput.value = new Date().toISOString().split('T')[0];
+            }
+
+            // Initialize signature pad
+            const signaturePadIssue = new SignaturePad(document.getElementById('signature-pad-issue'));
+
+            // Resize canvas for better signature quality
+            function resizeCanvas() {
+                const canvases = [document.getElementById('signature-pad-issue')];
+                canvases.forEach(canvas => {
+                    if (!canvas) return;
+                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+                    canvas.width = canvas.offsetWidth * ratio;
+                    canvas.height = canvas.offsetHeight * ratio;
+                    canvas.getContext("2d").scale(ratio, ratio);
+                });
+                signaturePadIssue.clear();
+            }
+            
+            window.addEventListener("resize", resizeCanvas);
+            resizeCanvas();
+
+            // Clear signature button
+            document.querySelector('.clear-signature[data-pad="issue"]').addEventListener('click', () => {
+                signaturePadIssue.clear();
+                document.getElementById('signature-error').style.display = 'none';
+            });
+
+            // Form validation
+            const form = document.getElementById('asset-form');
+            const requiredFields = form.querySelectorAll('[required]');
+            const signatureError = document.getElementById('signature-error');
+
+            // Add validation on blur for required fields
+            requiredFields.forEach(field => {
+                field.addEventListener('blur', () => validateField(field));
+            });
+
+            function validateField(field) {
+                const inputGroup = field.closest('.input-group');
+                const errorMessage = inputGroup.querySelector('.error-message');
+                
+                if (!field.value.trim()) {
+                    inputGroup.classList.add('error');
+                    inputGroup.classList.remove('success');
+                    errorMessage.style.display = 'block';
+                    return false;
+                } else {
+                    inputGroup.classList.remove('error');
+                    inputGroup.classList.add('success');
+                    errorMessage.style.display = 'none';
+                    return true;
+                }
+            }
+
+            function validateForm() {
+                let isValid = true;
+                
+                // Validate required fields
+                requiredFields.forEach(field => {
+                    if (!validateField(field)) {
+                        isValid = false;
+                    }
+                });
+                
+                // Validate signature
+                if (signaturePadIssue.isEmpty()) {
+                    signatureError.style.display = 'block';
+                    isValid = false;
+                } else {
+                    signatureError.style.display = 'none';
+                }
+                
+                return isValid;
+            }
+
+            // Form submission with confirmation modal
+            const submitBtn = document.getElementById('submit-btn');
+            const confirmationModal = document.getElementById('confirmation-modal');
+            const cancelSubmitBtn = document.getElementById('cancel-submit');
+            const confirmSubmitBtn = document.getElementById('confirm-submit');
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                if (validateForm()) {
+                    // Show confirmation modal
+                    confirmationModal.style.display = 'flex';
+                }
+            });
+
+            cancelSubmitBtn.addEventListener('click', () => {
+                confirmationModal.style.display = 'none';
+            });
+
+            confirmSubmitBtn.addEventListener('click', () => {
+                // Save form data to localStorage
+                saveFormData();
+                
+                // Disable submit button and show loading state
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+                
+                // Simulate submission process
+                setTimeout(() => {
+                    document.getElementById('acknowledgment-form').style.display = 'none';
+                    document.getElementById('success-message').style.display = 'block';
+                    confirmationModal.style.display = 'none';
+                    
+                    // Clear saved data after successful submission
+                    localStorage.removeItem('assetFormData');
+                }, 1500);
+            });
+
+            // Clear form button
+            document.getElementById('clear-form-btn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to clear the form? All entered data will be lost.')) {
+                    form.reset();
+                    signaturePadIssue.clear();
+                    document.querySelectorAll('select').forEach(sel => sel.value = "");
+                    if (receivingDateInput) receivingDateInput.value = new Date().toISOString().split('T')[0];
+                    
+                    // Clear validation states
+                    document.querySelectorAll('.input-group').forEach(group => {
+                        group.classList.remove('error', 'success');
+                    });
+                    document.querySelectorAll('.error-message').forEach(msg => {
+                        msg.style.display = 'none';
+                    });
+                    signatureError.style.display = 'none';
+                    
+                    // Clear saved data
+                    localStorage.removeItem('assetFormData');
+                }
+            });
+
+            // New form button
+            document.getElementById('new-form-btn').addEventListener('click', () => {
+                document.getElementById('success-message').style.display = 'none';
+                document.getElementById('acknowledgment-form').style.display = 'block';
+                form.reset();
+                signaturePadIssue.clear();
+                if (receivingDateInput) receivingDateInput.value = new Date().toISOString().split('T')[0];
+                
+                // Clear validation states
+                document.querySelectorAll('.input-group').forEach(group => {
+                    group.classList.remove('error', 'success');
+                });
+                document.querySelectorAll('.error-message').forEach(msg => {
+                    msg.style.display = 'none';
+                });
+                signatureError.style.display = 'none';
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i>Submit Form';
+            });
+
+            // Save form data to localStorage
+            function saveFormData() {
+                const formData = {
+                    employeeName: document.getElementById('employee-name').value,
+                    employeeNo: document.getElementById('employee-no').value, // Added Employee No
+                    receivingDate: document.getElementById('receiving-date').value,
+                    deviceType: document.getElementById('device-type').value,
+                    makeModel: document.getElementById('make-model').value,
+                    imei: document.getElementById('imei').value,
+                    serialNumber: document.getElementById('serial-number').value,
+                    assetTag: document.getElementById('asset-tag').value,
+                    phoneNumber: document.getElementById('phone-number').value,
+                    description: document.getElementById('description').value,
+                    accessories: {
+                        chargerCable: document.getElementById('acc-charger-cable').checked,
+                        powerAdapter: document.getElementById('acc-power-adapter').checked,
+                        case: document.getElementById('acc-case').checked,
+                        sim: document.getElementById('acc-sim').checked,
+                        headphones: document.getElementById('acc-headphones').checked,
+                        stylus: document.getElementById('acc-stylus').checked
+                    }
+                };
+                
+                localStorage.setItem('assetFormData', JSON.stringify(formData));
+            }
+
+            // Load form data from localStorage
+            function loadFormData() {
+                const savedData = localStorage.getItem('assetFormData');
+                if (savedData) {
+                    const formData = JSON.parse(savedData);
+                    
+                    document.getElementById('employee-name').value = formData.employeeName || '';
+                    document.getElementById('employee-no').value = formData.employeeNo || ''; // Added Employee No
+                    document.getElementById('receiving-date').value = formData.receivingDate || new Date().toISOString().split('T')[0];
+                    document.getElementById('device-type').value = formData.deviceType || '';
+                    document.getElementById('make-model').value = formData.makeModel || '';
+                    document.getElementById('imei').value = formData.imei || '';
+                    document.getElementById('serial-number').value = formData.serialNumber || '';
+                    document.getElementById('asset-tag').value = formData.assetTag || '';
+                    document.getElementById('phone-number').value = formData.phoneNumber || '';
+                    document.getElementById('description').value = formData.description || '';
+                    
+                    // Set checkbox states
+                    if (formData.accessories) {
+                        document.getElementById('acc-charger-cable').checked = formData.accessories.chargerCable || false;
+                        document.getElementById('acc-power-adapter').checked = formData.accessories.powerAdapter || false;
+                        document.getElementById('acc-case').checked = formData.accessories.case || false;
+                        document.getElementById('acc-sim').checked = formData.accessories.sim || false;
+                        document.getElementById('acc-headphones').checked = formData.accessories.headphones || false;
+                        document.getElementById('acc-stylus').checked = formData.accessories.stylus || false;
+                    }
+                }
+            }
+
+            // Auto-save form data when fields change
+            form.addEventListener('input', () => {
+                saveFormData();
+            });
+
+            // Load saved form data on page load
+            loadFormData();
+        });
+    </script>
+</body>
+</html>
