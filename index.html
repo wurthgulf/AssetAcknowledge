@@ -3,713 +3,572 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Acknowledgment Form</title>
+    <title>Würth Bonus Processor v2.2</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-
-    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
-
     <style>
-        :root {
-            --primary-color: #d32f2f; --primary-hover: #b71c1c; --border-color: #ced4da;
-            --focus-ring-color: rgba(211, 47, 47, 0.2); --body-bg: #f4f7f9; --form-bg: #ffffff;
-            --text-color-dark: #212529; --text-color-light: #6c757d; --success-color: #28a745;
-            --error-color: #dc3545; --warning-color: #ffc107;
-            
-            /* Dark mode variables */
-            --dark-body-bg: #1a1a1a; --dark-form-bg: #2d2d2d; --dark-text-color: #e9ecef;
-            --dark-border-color: #495057; --dark-focus-ring: rgba(211, 47, 47, 0.3);
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .drop-zone { 
+            border: 2px dashed #cbd5e1; 
+            transition: all 0.3s ease;
         }
-        
-        /* Dark mode styles */
-        body.dark-mode {
-            background-color: var(--dark-body-bg);
-            color: var(--dark-text-color);
+        .drop-zone.dragover { 
+            border-color: #ef4444; 
+            background-color: #fef2f2; 
         }
-        
-        body.dark-mode .form-container {
-            background-color: var(--dark-form-bg);
+        .drop-zone.uploaded {
+            border-color: #22c55e;
+            background-color: #f0fdf4;
         }
-        
-        body.dark-mode .input-group input,
-        body.dark-mode .input-group select,
-        body.dark-mode .input-group textarea {
-            border-color: var(--dark-border-color);
-            background-color: var(--dark-form-bg);
-            color: var(--dark-text-color);
+        .step-badge {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
         }
-        
-        body.dark-mode .input-group label {
-            background-color: var(--dark-form-bg);
-            color: var(--dark-text-color);
-        }
-        
-        body.dark-mode .input-group input:focus,
-        body.dark-mode .input-group select:focus,
-        body.dark-mode .input-group textarea:focus {
-            box-shadow: 0 0 0 3px var(--dark-focus-ring);
-        }
-        
-        body.dark-mode .section-divider::before,
-        body.dark-mode .section-divider::after {
-            border-bottom-color: var(--dark-border-color);
-        }
-        
-        body.dark-mode .acknowledgment li {
-            color: var(--dark-text-color);
-        }
-        
-        body.dark-mode .signature-pad-wrapper {
-            border-color: var(--dark-border-color);
-        }
-        
-        body.dark-mode .btn-secondary {
-            background-color: #495057;
-            color: var(--dark-text-color);
-        }
-        
-        body.dark-mode .btn-secondary:hover {
-            background-color: #5a6268;
-        }
-        
-        *, *::before, *::after { box-sizing: border-box; }
-        body {
-            font-family: 'Poppins', sans-serif; background-color: var(--body-bg); color: var(--text-color-dark);
-            margin: 0; padding: 2rem; display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        .form-container {
-            background-color: var(--form-bg); padding: 2rem; border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07); width: 100%; max-width: 900px;
-            transition: background-color 0.3s, box-shadow 0.3s;
-        }
-        
-        /* Header with theme toggle */
-        header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid #e9ecef; padding-bottom: 1.25rem; margin-bottom: 1.5rem; 
-            position: relative;
-        }
-        header h1 { font-size: 1.4rem; font-weight: 600; color: var(--primary-color); margin: 0; }
-        header img { max-height: 45px; }
-        
-        .theme-toggle {
-            position: absolute;
-            right: 0;
-            top: 0;
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            cursor: pointer;
-            color: var(--text-color-light);
-            transition: color 0.3s;
-        }
-        
-        .theme-toggle:hover {
-            color: var(--primary-color);
-        }
-        
-        /* Form sections */
-        .section-divider { display: flex; align-items: center; text-align: center; margin: 1.75rem 0 1.25rem 0; }
-        .section-divider::before, .section-divider::after { content: ''; flex: 1; border-bottom: 1px solid #e9ecef; }
-        .section-divider:not(:empty)::before { margin-right: .5em; }
-        .section-divider:not(:empty)::after { margin-left: .5em; }
-        .section-divider span { font-size: 0.9rem; font-weight: 600; color: var(--text-color-light); }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem 1.5rem; }
-        .grid-span-2 { grid-column: 1 / -1; }
-        
-        /* Form inputs */
-        .input-group { position: relative; margin-bottom: 0.5rem; }
-        .input-group input, .input-group select, .input-group textarea {
-            width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem;
-            transition: border-color 0.2s, box-shadow 0.2s; background-color: transparent;
-        }
-        .input-group label {
-            position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); background: var(--form-bg);
-            padding: 0 0.25rem; color: var(--text-color-light); transition: all 0.2s ease-in-out; pointer-events: none; font-size: 0.9rem;
-        }
-        .input-group input:focus, .input-group select:focus, .input-group textarea:focus {
-            outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px var(--focus-ring-color);
-        }
-        .input-group input:focus + label, .input-group input:not(:placeholder-shown) + label,
-        .input-group select:focus + label, .input-group select:valid + label,
-        .input-group textarea:focus + label, .input-group textarea:not(:placeholder-shown) + label {
-            top: 0; transform: translateY(-50%) scale(0.8); color: var(--primary-color); font-weight: 600;
-        }
-        label.required::after { content: ' *'; color: var(--primary-color); }
-        
-        /* Validation styles */
-        .input-group.error input, 
-        .input-group.error select, 
-        .input-group.error textarea {
-            border-color: var(--error-color);
-        }
-        
-        .input-group.success input, 
-        .input-group.success select, 
-        .input-group.success textarea {
-            border-color: var(--success-color);
-        }
-        
-        .error-message {
-            color: var(--error-color);
-            font-size: 0.75rem;
-            margin-top: 0.25rem;
-            display: none;
-        }
-        
-        .input-group.error .error-message {
-            display: block;
-        }
-        
-        /* Checkbox group */
-        .checkbox-group { display: flex; flex-wrap: wrap; gap: 1.25rem; align-items: center; padding: 0.5rem 0; }
-        .checkbox-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; }
-        
-        /* Acknowledgment section */
-        .acknowledgment ul { list-style-type: none; padding-left: 0; margin: 0.5rem 0 1rem 0; font-size: 0.8rem; }
-        .acknowledgment li { position: relative; padding-left: 20px; margin-bottom: 6px; line-height: 1.5; color: var(--text-color-light); }
-        .acknowledgment li::before { content: '\f058'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--primary-color); position: absolute; left: 0; top: 2px; }
-        
-        /* Signature pad */
-        .signature-pad-wrapper { position: relative; border: 1px solid var(--border-color); border-radius: 6px; height: 100px; margin-top: 0.5rem; }
-        .signature-pad { width: 100%; height: 100%; }
-        .clear-signature { position: absolute; top: 4px; right: 8px; font-size: 0.75rem; background: none; border: none; cursor: pointer; color: #6c757d; }
-        .signature-error { color: var(--error-color); font-size: 0.75rem; margin-top: 0.25rem; display: none; }
-        
-        /* Form actions */
-        .form-actions { margin-top: 1.75rem; display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid #e9ecef; padding-top: 1.25rem; }
-        button { border: none; padding: 0.6rem 1.25rem; font-size: 0.85rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 0.5rem; }
-        .btn-primary { background-color: var(--primary-color); color: #ffffff; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-secondary { background-color: #e9ecef; color: var(--text-color-dark); }
-        .btn-secondary:hover { background-color: #dee2e6; }
-        
-        /* Success message */
-        #success-message { display: none; text-align: center; padding: 2rem; background-color: #f0fdf4; border: 1px solid #a7f3d0; border-radius: 8px; color: #166534; }
-        
-        /* Confirmation modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: var(--form-bg);
-            padding: 2rem;
-            border-radius: 8px;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 0.75rem;
-            margin-top: 1.5rem;
-        }
-        
-        /* Responsive design */
-        @media (max-width: 768px) { 
-            .form-grid { grid-template-columns: 1fr; } 
-            .form-actions {
-                flex-direction: column;
-            }
-            .checkbox-group {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.75rem;
-            }
-        }
-        
-        /* Print styles */
-        @media print {
-            @page { size: A4 portrait; margin: 1.2cm; }
-            body { 
-                background: #fff; padding: 0; margin: 0; 
-                font-size: 10pt;
-                color: #000; 
-            }
-            .form-container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
-            header { padding-bottom: 8pt; margin-bottom: 12pt; } 
-            header h1 { font-size: 16pt; }
-            header img { max-height: 35px; }
-            
-            /* Hide theme toggle in print */
-            .theme-toggle { display: none; }
-
-            .section-divider { margin: 12pt 0 10pt 0; } 
-            .section-divider span { font-size: 9pt; }
-            
-            .form-grid { 
-                grid-template-columns: 1fr 1fr;
-                gap: 8pt 12pt; 
-            }
-            
-            .input-group label {
-                font-size: 8.5pt;
-                background: #fff; 
-                padding: 0 2px;
-                top: 0;
-                transform: translateY(-50%) scale(0.8);
-                color: #000;
-            }
-            
-            input, select, textarea { 
-                padding: 4pt; 
-                font-size: 10pt;
-                border-radius: 2px;
-                border: 1px solid #666;
-                background-color: #fff !important;
-                -webkit-print-color-adjust: exact;
-            }
-
-            .checkbox-group {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 4pt;
-                padding: 0;
-            }
-            
-            .acknowledgment ul { column-count: 2; column-gap: 15pt; margin: 4pt 0 8pt 0; }
-            .acknowledgment li { 
-                font-size: 8.5pt;
-                line-height: 1.3; 
-            }
-            
-            .signature-pad-wrapper { 
-                height: 60px; 
-                border: 1px solid #666;
-            }
-            
-            /* Hide interactive elements */
-            .form-actions, .clear-signature, .acknowledgment li::before, 
-            .theme-toggle, .error-message, .signature-error { 
-                display: none; 
-            }
-            
-            /* Replace FontAwesome icon with a standard bullet point for print */
-            .acknowledgment li { 
-                list-style-type: disc; 
-                padding-left: 12pt; 
-            }
-        }
+        .table-header { @apply px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider bg-gray-100 border-b; }
+        .table-cell { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-b border-gray-100; }
     </style>
 </head>
-<body>
-    <div class="form-container">
-        <header>
-            <h1>Asset Acknowledgment</h1>
-            <img src="https://i.ibb.co/pvvsMy1X/Wurth-Gulf-CMYK-PNG-01.png" alt="WURTH Logo">
-            <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
-                <i class="fa-solid fa-moon"></i>
-            </button>
-        </header>
+<body class="bg-slate-100 min-h-screen pb-20">
 
-        <div id="acknowledgment-form">
-            <form id="asset-form">
-                <div class="form-grid">
-                    
-                    <!-- ISSUANCE DETAILS SECTION -->
-                    <div class="section-divider grid-span-2"><span>Issuance Details</span></div>
-                    
-                    <div class="input-group">
-                        <input type="text" id="employee-name" placeholder=" " required>
-                        <label for="employee-name" class="required">Employee Name</label>
-                        <div class="error-message">Please enter your full name</div>
-                    </div>
-                    
-                    <!-- ADDED: Employee No Field -->
-                    <div class="input-group">
-                        <input type="text" id="employee-no" placeholder=" " required>
-                        <label for="employee-no" class="required">Employee No</label>
-                        <div class="error-message">Please enter your employee number</div>
-                    </div>
-
-                    <div class="input-group">
-                        <input type="date" id="receiving-date" required>
-                        <label for="receiving-date" class="required">Receiving Date</label>
-                        <div class="error-message">Please select a valid date</div>
-                    </div>
-                    
-                    <!-- ASSET DETAILS SECTION - REORDERED -->
-                    <div class="section-divider grid-span-2"><span>Asset Details</span></div>
-                    
-                    <!-- 1. Device Type -->
-                    <div class="input-group">
-                        <select id="device-type" required>
-                            <option value="" disabled selected></option>
-                            <option value="Phone">Phone</option>
-                            <option value="Tablet">Tablet</option>
-                            <option value="Laptop">Laptop</option>
-                            <option value="Hotspot">Mobile Hotspot</option>
-                        </select>
-                        <label for="device-type" class="required">Device Type</label>
-                        <div class="error-message">Please select a device type</div>
-                    </div>
-
-                    <!-- 2. Make & Model -->
-                    <div class="input-group">
-                        <input type="text" id="make-model" placeholder=" " required>
-                        <label for="make-model" class="required">Make & Model</label>
-                        <div class="error-message">Please enter the device make and model</div>
-                    </div>
-
-                    <!-- 3. Phone Number -->
-                    <div class="input-group">
-                        <input type="text" id="phone-number" placeholder=" ">
-                        <label for="phone-number">Phone Number</label>
-                    </div>
-
-                    <!-- 4. Asset Tag / ID -->
-                    <div class="input-group">
-                        <input type="text" id="asset-tag" placeholder=" ">
-                        <label for="asset-tag">Asset Tag / ID</label>
-                    </div>
-
-                    <!-- 5. IMEI Number -->
-                    <div class="input-group">
-                        <input type="text" id="imei" placeholder=" " required>
-                        <label for="imei" class="required">IMEI Number</label>
-                        <div class="error-message">Please enter a valid IMEI number</div>
-                    </div>
-
-                    <!-- 6. Serial Number -->
-                    <div class="input-group">
-                        <input type="text" id="serial-number" placeholder=" " required>
-                        <label for="serial-number" class="required">Serial Number</label>
-                        <div class="error-message">Please enter the serial number</div>
-                    </div>
-                    
-                    <div class="grid-span-2">
-                        <div class="section-divider"><span>Included Accessories</span></div>
-                        <div class="checkbox-group">
-                            <div class="checkbox-item"><input type="checkbox" id="acc-charger-cable"><label for="acc-charger-cable">Charger Cable</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="acc-power-adapter"><label for="acc-power-adapter">Power Adapter</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="acc-case"><label for="acc-case">Protective Case</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="acc-sim"><label for="acc-sim">SIM Card</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="acc-headphones"><label for="acc-headphones">Headphones</label></div>
-                            <div class="checkbox-item"><input type="checkbox" id="acc-stylus"><label for="acc-stylus">Stylus</label></div>
-                        </div>
-                    </div>
-
-                    <!-- Description/Notes Section -->
-                    <div class="grid-span-2">
-                        <div class="section-divider"><span>Additional Notes</span></div>
-                        <div class="input-group">
-                            <textarea id="description" placeholder=" " rows="4"></textarea>
-                            <label for="description">Description / Custom Notes</label>
-                        </div>
-                    </div>
-
-                    <div class="acknowledgment grid-span-2">
-                        <div class="section-divider"><span>Employee Acknowledgment</span></div>
-                        <ul>
-                            <li><strong>Security:</strong> I will secure this device with a strong PIN/password and will not leave it unattended.</li>
-                            <li><strong>Acceptable Use:</strong> I will use this device primarily for business purposes per company policy.</li>
-                            <li><strong>Data Usage:</strong> I will be mindful of mobile data consumption and obtain pre-approval for international roaming.</li>
-                            <li><strong>Reporting Loss/Theft:</strong> I will report the loss or theft of this device to my manager and IT immediately.</li>
-                            <li><strong>Responsibility:</strong> I am responsible for the physical care of the device and may be liable for costs due to negligence.</li>
-                            <li><strong>Return Policy:</strong> I will return the device and all accessories upon request or at the end of my employment.</li>
-                        </ul>
-                        <label for="employee-signature-issue" class="required" style="font-weight:600; font-size: 0.9rem;">Employee Signature</label>
-                        <div class="signature-pad-wrapper">
-                            <canvas id="signature-pad-issue" class="signature-pad"></canvas>
-                            <button type="button" class="clear-signature" data-pad="issue">Clear</button>
-                        </div>
-                        <div class="signature-error" id="signature-error">Please provide your signature to acknowledge receipt</div>
-                    </div>
+    <nav class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-red-600 text-2xl font-extrabold mr-2">WÜRTH</span>
+                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.2</span>
                 </div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" id="clear-form-btn">Clear Form</button>
-                    <button type="button" class="btn-secondary" onclick="window.print()"><i class="fa-solid fa-print"></i>Print</button>
-                    <button type="submit" class="btn-primary" id="submit-btn"><i class="fa-solid fa-check"></i>Submit Form</button>
-                </div>
-            </form>
-        </div>
-        
-        <div id="success-message">
-            <h2><i class="fa-solid fa-check-circle"></i> Submission Complete</h2>
-            <p>Your mobile asset acknowledgment has been successfully recorded.</p>
-            <button class="btn-primary" id="new-form-btn"><i class="fa-solid fa-plus"></i>Create New Form</button>
-        </div>
-    </div>
-
-    <!-- Confirmation Modal -->
-    <div class="modal" id="confirmation-modal">
-        <div class="modal-content">
-            <h3>Confirm Submission</h3>
-            <p>Are you sure you want to submit this form? Please review all information before proceeding.</p>
-            <div class="modal-actions">
-                <button class="btn-secondary" id="cancel-submit">Cancel</button>
-                <button class="btn-primary" id="confirm-submit">Submit</button>
             </div>
         </div>
-    </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6 overflow-hidden">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="step-badge bg-red-100 text-red-700 mr-3">1</div>
+                    <h2 class="text-lg font-bold text-gray-800">Upload Source Files</h2>
+                </div>
+                <button onclick="location.reload()" class="text-sm text-gray-400 hover:text-red-600 underline">Reset All</button>
+            </div>
+            
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="drop-zone rounded-lg p-6 text-center cursor-pointer relative group" id="drop-hr">
+                    <input type="file" id="file-hr" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".xlsx,.csv" onchange="handleFile(this, 'hr')">
+                    <i class="fa-solid fa-users text-3xl text-gray-300 mb-3 group-hover:text-red-400"></i>
+                    <h3 class="font-bold text-gray-700 text-sm">HR & Tenure</h3>
+                    <p class="text-xs text-gray-400 mt-1" id="name-hr">Drag or Click</p>
+                </div>
+
+                <div class="drop-zone rounded-lg p-6 text-center cursor-pointer relative group" id="drop-sales">
+                    <input type="file" id="file-sales" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".xlsx,.csv" onchange="handleFile(this, 'sales')">
+                    <i class="fa-solid fa-chart-line text-3xl text-gray-300 mb-3 group-hover:text-red-400"></i>
+                    <h3 class="font-bold text-gray-700 text-sm">Sales Performance</h3>
+                    <p class="text-xs text-gray-400 mt-1" id="name-sales">Drag or Click</p>
+                </div>
+
+                <div class="drop-zone rounded-lg p-6 text-center cursor-pointer relative group" id="drop-comm">
+                    <input type="file" id="file-comm" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".xlsx,.csv" onchange="handleFile(this, 'comm')">
+                    <i class="fa-solid fa-file-invoice-dollar text-3xl text-gray-300 mb-3 group-hover:text-red-400"></i>
+                    <h3 class="font-bold text-gray-700 text-sm">Commission Data</h3>
+                    <p class="text-xs text-gray-400 mt-1" id="name-comm">Drag or Click</p>
+                </div>
+
+                <div class="drop-zone rounded-lg p-6 text-center cursor-pointer relative group" id="drop-cust">
+                    <input type="file" id="file-cust" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".xlsx,.csv" onchange="handleFile(this, 'cust')">
+                    <i class="fa-solid fa-user-plus text-3xl text-gray-300 mb-3 group-hover:text-red-400"></i>
+                    <h3 class="font-bold text-gray-700 text-sm">Customer Bonus</h3>
+                    <p class="text-xs text-gray-400 mt-1" id="name-cust">Drag or Click</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-config" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 mb-6 transition-all">
+            <div class="p-6 border-b border-gray-100 flex items-center">
+                <div class="step-badge bg-red-100 text-red-700 mr-3">2</div>
+                <h2 class="text-lg font-bold text-gray-800">Map Columns & Settings</h2>
+            </div>
+            
+            <div class="p-6">
+                <div class="mb-6 p-4 bg-gray-50 rounded border border-gray-100">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Processing Date (For Tenure Calculation)</label>
+                    <input type="date" id="process-date" class="border border-gray-300 rounded p-2 text-sm w-full md:w-1/3 focus:border-red-500 focus:ring-1 focus:ring-red-500">
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-gray-800 border-b pb-2">Common Identifiers (from HR File)</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Sales Unit (ID) <span class="text-red-500">*</span></label>
+                                <select id="map-id" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Employee Name</label>
+                                <select id="map-name" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                        </div>
+
+                        <h3 class="font-bold text-gray-800 border-b pb-2 pt-4">HR File Logic</h3>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Joining Date</label>
+                            <select id="map-join-date" class="w-full border p-2 rounded text-sm bg-white"></select>
+                        </div>
+
+                        <h3 class="font-bold text-gray-800 border-b pb-2 pt-4">Commission File Logic</h3>
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">Commission Amount</label>
+                            <select id="map-commission" class="w-full border p-2 rounded text-sm bg-white"></select>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <h3 class="font-bold text-gray-800 border-b pb-2">Sales Performance Logic</h3>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Turnover (AED)</label>
+                                <select id="map-turnover" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Target Fulfillment (STF %)</label>
+                                <select id="map-stf" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                        </div>
+
+                        <h3 class="font-bold text-gray-800 border-b pb-2 pt-4">Customer Bonus Logic</h3>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">MBC Score (Calc)</label>
+                                <select id="map-mbc" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">CB Result (Calc)</label>
+                                <select id="map-cb" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">Division (Display)</label>
+                                <select id="map-division" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">%MBC (Display)</label>
+                                <select id="map-pct-mbc" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">%CB (Display)</label>
+                                <select id="map-pct-cb" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-600 mb-1">New + React (Count)</label>
+                                <select id="map-new-cust" class="w-full border p-2 rounded text-sm bg-white"></select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end">
+                    <button onclick="calculateAndPreview()" class="bg-gray-900 text-white px-6 py-2 rounded shadow hover:bg-black transition-colors flex items-center">
+                        <i class="fa-solid fa-table-list mr-2"></i> Preview Results
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-preview" class="hidden bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="step-badge bg-green-100 text-green-700 mr-3">3</div>
+                    <h2 class="text-lg font-bold text-gray-800">Preview & Download</h2>
+                </div>
+                <button onclick="downloadExcel()" class="bg-red-600 text-white px-6 py-2 rounded shadow hover:bg-red-700 font-bold transition-colors flex items-center">
+                    <i class="fa-solid fa-download mr-2"></i> Download Excel
+                </button>
+            </div>
+            
+            <div class="overflow-x-auto p-6">
+                <table class="min-w-full divide-y divide-gray-200" id="preview-table">
+                    <thead>
+                        <tr>
+                            <th class="table-header">Sales Unit</th>
+                            <th class="table-header">Name</th>
+                            <th class="table-header">Division</th>
+                            <th class="table-header text-right">Target Fulfillment</th>
+                            <th class="table-header text-right">Turnover</th>
+                            <th class="table-header text-right">%MBC</th>
+                            <th class="table-header text-right">%CB</th>
+                            <th class="table-header text-right">Seniority</th>
+                            <th class="table-header text-right">Commission</th>
+                            <th class="table-header text-right">STF Bonus</th>
+                            <th class="table-header text-right">Cust Bonus</th>
+                            <th class="table-header text-right text-red-600 font-bold">Total Payout</th>
+                            <th class="table-header">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="preview-body">
+                        </tbody>
+                </table>
+                <p class="text-xs text-gray-400 mt-4 text-center">* Preview showing first 10 rows only. Download full file to see all data.</p>
+            </div>
+        </div>
+
+    </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Theme toggle functionality
-            const themeToggle = document.getElementById('theme-toggle');
-            const themeIcon = themeToggle.querySelector('i');
-            
-            // Check for saved theme preference or default to light mode
-            const savedTheme = localStorage.getItem('theme') || 'light';
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            }
-            
-            themeToggle.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
-                    themeIcon.classList.remove('fa-moon');
-                    themeIcon.classList.add('fa-sun');
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    themeIcon.classList.remove('fa-sun');
-                    themeIcon.classList.add('fa-moon');
-                    localStorage.setItem('theme', 'light');
-                }
-            });
+        const store = {
+            data: { hr: null, sales: null, comm: null, cust: null },
+            headers: { hr: [], sales: [], comm: [], cust: [] },
+            calculatedResults: []
+        };
 
-            // Set current date as default
-            const receivingDateInput = document.getElementById('receiving-date');
-            if (receivingDateInput) {
-                receivingDateInput.value = new Date().toISOString().split('T')[0];
-            }
+        document.getElementById('process-date').valueAsDate = new Date();
 
-            // Initialize signature pad
-            const signaturePadIssue = new SignaturePad(document.getElementById('signature-pad-issue'));
+        // --- File Handling ---
+        async function handleFile(input, type) {
+            const file = input.files[0];
+            if (!file) return;
 
-            // Resize canvas for better signature quality
-            function resizeCanvas() {
-                const canvases = [document.getElementById('signature-pad-issue')];
-                canvases.forEach(canvas => {
-                    if (!canvas) return;
-                    const ratio = Math.max(window.devicePixelRatio || 1, 1);
-                    canvas.width = canvas.offsetWidth * ratio;
-                    canvas.height = canvas.offsetHeight * ratio;
-                    canvas.getContext("2d").scale(ratio, ratio);
-                });
-                signaturePadIssue.clear();
-            }
-            
-            window.addEventListener("resize", resizeCanvas);
-            resizeCanvas();
+            const dropZone = document.getElementById(`drop-${type}`);
+            const nameLabel = document.getElementById(`name-${type}`);
+            nameLabel.innerText = "Loading...";
 
-            // Clear signature button
-            document.querySelector('.clear-signature[data-pad="issue"]').addEventListener('click', () => {
-                signaturePadIssue.clear();
-                document.getElementById('signature-error').style.display = 'none';
-            });
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer);
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
 
-            // Form validation
-            const form = document.getElementById('asset-form');
-            const requiredFields = form.querySelectorAll('[required]');
-            const signatureError = document.getElementById('signature-error');
+                if (jsonData.length === 0) throw new Error("File is empty");
 
-            // Add validation on blur for required fields
-            requiredFields.forEach(field => {
-                field.addEventListener('blur', () => validateField(field));
-            });
+                store.data[type] = jsonData;
+                store.headers[type] = Object.keys(jsonData[0]);
 
-            function validateField(field) {
-                const inputGroup = field.closest('.input-group');
-                const errorMessage = inputGroup.querySelector('.error-message');
+                dropZone.classList.add('uploaded');
+                nameLabel.innerText = file.name;
+                nameLabel.classList.add('text-green-600', 'font-semibold');
                 
-                if (!field.value.trim()) {
-                    inputGroup.classList.add('error');
-                    inputGroup.classList.remove('success');
-                    errorMessage.style.display = 'block';
-                    return false;
-                } else {
-                    inputGroup.classList.remove('error');
-                    inputGroup.classList.add('success');
-                    errorMessage.style.display = 'none';
-                    return true;
+                checkAllFilesLoaded();
+
+            } catch (err) {
+                console.error(err);
+                nameLabel.innerText = "Error loading file";
+                nameLabel.classList.add('text-red-500');
+            }
+        }
+
+        function checkAllFilesLoaded() {
+            if (store.data.hr && store.data.sales && store.data.comm && store.data.cust) {
+                initMapping();
+            }
+        }
+
+        // --- Mapping Logic ---
+        function initMapping() {
+            document.getElementById('step-config').classList.remove('hidden');
+            
+            // HR File
+            populateSelect('map-id', store.headers.hr);
+            populateSelect('map-name', store.headers.hr);
+            populateSelect('map-join-date', store.headers.hr);
+            
+            // Sales File
+            populateSelect('map-turnover', store.headers.sales);
+            populateSelect('map-stf', store.headers.sales);
+            
+            // Commission File
+            populateSelect('map-commission', store.headers.comm);
+            
+            // Customer Bonus File
+            populateSelect('map-mbc', store.headers.cust);
+            populateSelect('map-cb', store.headers.cust);
+            populateSelect('map-new-cust', store.headers.cust);
+            populateSelect('map-division', store.headers.cust);
+            populateSelect('map-pct-mbc', store.headers.cust);
+            populateSelect('map-pct-cb', store.headers.cust);
+
+            // Auto-Suggest Mappings
+            autoMap('map-id', ['sales unit', 'id', 'code']);
+            autoMap('map-name', ['sales name', 'employee name', 'name']);
+            autoMap('map-join-date', ['joined', 'date', 'start']);
+            
+            autoMap('map-turnover', ['turnover', 'sales', 'revenue']);
+            autoMap('map-stf', ['fulfillment', 'target fulfillment', 'stf']);
+            
+            autoMap('map-commission', ['commission', 'incentive']);
+            
+            autoMap('map-mbc', ['mbc after qc', 'mbc']);
+            autoMap('map-cb', ['cb after qc', 'cb']);
+            autoMap('map-division', ['division', 'sector']);
+            autoMap('map-pct-mbc', ['%mbc']);
+            autoMap('map-pct-cb', ['%cb']);
+            autoMap('map-new-cust', ['new after qc', 'new']);
+        }
+
+        function populateSelect(id, options) {
+            const select = document.getElementById(id);
+            select.innerHTML = '<option value="">-- Select Column --</option>';
+            options.forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt;
+                el.innerText = opt;
+                select.appendChild(el);
+            });
+        }
+
+        function autoMap(selectId, keywords) {
+            const select = document.getElementById(selectId);
+            const options = Array.from(select.options);
+            for (let kw of keywords) {
+                const match = options.find(opt => opt.value.toLowerCase().includes(kw));
+                if (match) {
+                    select.value = match.value;
+                    return; 
                 }
             }
+        }
 
-            function validateForm() {
-                let isValid = true;
+        // --- Calculation Engine ---
+        function calculateAndPreview() {
+            const map = {
+                id: document.getElementById('map-id').value,
+                name: document.getElementById('map-name').value,
+                joinDate: document.getElementById('map-join-date').value,
+                turnover: document.getElementById('map-turnover').value,
+                stf: document.getElementById('map-stf').value,
+                comm: document.getElementById('map-commission').value,
+                mbc: document.getElementById('map-mbc').value,
+                cb: document.getElementById('map-cb').value,
+                newCust: document.getElementById('map-new-cust').value,
+                division: document.getElementById('map-division').value,
+                pctMbc: document.getElementById('map-pct-mbc').value,
+                pctCb: document.getElementById('map-pct-cb').value
+            };
+
+            if (!map.id || !map.joinDate) {
+                alert("Please map at least Sales Unit (ID) and Joining Date.");
+                return;
+            }
+
+            const processDate = document.getElementById('process-date').valueAsDate;
+            const idxSales = createIndex(store.data.sales, map.id);
+            const idxComm = createIndex(store.data.comm, map.id);
+            const idxCust = createIndex(store.data.cust, map.id);
+
+            store.calculatedResults = [];
+
+            store.data.hr.forEach(row => {
+                let empID = String(row[map.id] || "").trim();
+                if (!empID) return;
+
+                let empName = map.name ? (row[map.name] || "") : "";
                 
-                // Validate required fields
-                requiredFields.forEach(field => {
-                    if (!validateField(field)) {
-                        isValid = false;
+                // 1. Tenure
+                let joinDateStr = row[map.joinDate];
+                let monthsWorked = getMonthsDiff(joinDateStr, processDate);
+                let yearsWorked = monthsWorked / 12;
+                
+                // Seniority Bonus
+                let senBonus = 0;
+                if (monthsWorked >= 13) {
+                    if (yearsWorked >= 12) senBonus = 4000;
+                    else if (yearsWorked >= 9) senBonus = 3000;
+                    else if (yearsWorked >= 6) senBonus = 2000;
+                    else if (yearsWorked >= 3) senBonus = 1000;
+                    else if (yearsWorked >= 1) senBonus = 500;
+                }
+
+                // 2. Sales Data (STF)
+                let sData = idxSales[empID] || {};
+                let turnover = parseNum(sData[map.turnover]);
+                let stf = parseNum(sData[map.stf]); // Target Fulfillment
+
+                let stfBonus = 0;
+                // Note: Assuming STF in file is e.g. 1.05 for 105%. Convert to 105 scale
+                // If the file has 1.05, we multiply by 100. If it has 105, we keep 105.
+                // Heuristic: if value is < 5, assume decimal percentage.
+                let stfScale = stf;
+                if (stf < 5 && stf > 0) stfScale = stf * 100;
+                
+                if (stfScale >= 100) {
+                    if (stfScale >= 121 && turnover >= 131000) stfBonus = turnover * 0.02;
+                    else stfBonus = getMatrixBonus(stfScale, turnover);
+                }
+
+                // 3. Customer Bonus & Extra Fields
+                let cData = idxCust[empID] || {};
+                let division = map.division ? (cData[map.division] || "") : "";
+                let valPctMbc = map.pctMbc ? (cData[map.pctMbc] || "") : "";
+                let valPctCb = map.pctCb ? (cData[map.pctCb] || "") : "";
+                
+                let custBonus = 0;
+                let note = "";
+
+                if (monthsWorked <= 7) {
+                    // New Emp logic (simplified for new + react)
+                    // Note: If you need to map "React" separately, we can add that back. 
+                    // Assuming "NewCust" column might contain total or we use just one for now.
+                    let nc = parseNum(cData[map.newCust]); 
+                    // For precise new vs react logic, ensure both cols are mapped. 
+                    // Currently using simplified mapping based on previous request.
+                    
+                    if (nc >= 6) {
+                         if (monthsWorked >= 5 && monthsWorked <= 7) {
+                            if (stfScale >= 90) custBonus = 1500;
+                            else note = "New Emp: <90% STF";
+                        } else {
+                            custBonus = 1500;
+                        }
                     }
-                });
-                
-                // Validate signature
-                if (signaturePadIssue.isEmpty()) {
-                    signatureError.style.display = 'block';
-                    isValid = false;
                 } else {
-                    signatureError.style.display = 'none';
-                }
-                
-                return isValid;
-            }
-
-            // Form submission with confirmation modal
-            const submitBtn = document.getElementById('submit-btn');
-            const confirmationModal = document.getElementById('confirmation-modal');
-            const cancelSubmitBtn = document.getElementById('cancel-submit');
-            const confirmSubmitBtn = document.getElementById('confirm-submit');
-
-            form.addEventListener('submit', (event) => {
-                event.preventDefault();
-                if (validateForm()) {
-                    // Show confirmation modal
-                    confirmationModal.style.display = 'flex';
-                }
-            });
-
-            cancelSubmitBtn.addEventListener('click', () => {
-                confirmationModal.style.display = 'none';
-            });
-
-            confirmSubmitBtn.addEventListener('click', () => {
-                // Save form data to localStorage
-                saveFormData();
-                
-                // Disable submit button and show loading state
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
-                
-                // Simulate submission process
-                setTimeout(() => {
-                    document.getElementById('acknowledgment-form').style.display = 'none';
-                    document.getElementById('success-message').style.display = 'block';
-                    confirmationModal.style.display = 'none';
-                    
-                    // Clear saved data after successful submission
-                    localStorage.removeItem('assetFormData');
-                }, 1500);
-            });
-
-            // Clear form button
-            document.getElementById('clear-form-btn').addEventListener('click', () => {
-                if (confirm('Are you sure you want to clear the form? All entered data will be lost.')) {
-                    form.reset();
-                    signaturePadIssue.clear();
-                    document.querySelectorAll('select').forEach(sel => sel.value = "");
-                    if (receivingDateInput) receivingDateInput.value = new Date().toISOString().split('T')[0];
-                    
-                    // Clear validation states
-                    document.querySelectorAll('.input-group').forEach(group => {
-                        group.classList.remove('error', 'success');
-                    });
-                    document.querySelectorAll('.error-message').forEach(msg => {
-                        msg.style.display = 'none';
-                    });
-                    signatureError.style.display = 'none';
-                    
-                    // Clear saved data
-                    localStorage.removeItem('assetFormData');
-                }
-            });
-
-            // New form button
-            document.getElementById('new-form-btn').addEventListener('click', () => {
-                document.getElementById('success-message').style.display = 'none';
-                document.getElementById('acknowledgment-form').style.display = 'block';
-                form.reset();
-                signaturePadIssue.clear();
-                if (receivingDateInput) receivingDateInput.value = new Date().toISOString().split('T')[0];
-                
-                // Clear validation states
-                document.querySelectorAll('.input-group').forEach(group => {
-                    group.classList.remove('error', 'success');
-                });
-                document.querySelectorAll('.error-message').forEach(msg => {
-                    msg.style.display = 'none';
-                });
-                signatureError.style.display = 'none';
-                
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-check"></i>Submit Form';
-            });
-
-            // Save form data to localStorage
-            function saveFormData() {
-                const formData = {
-                    employeeName: document.getElementById('employee-name').value,
-                    employeeNo: document.getElementById('employee-no').value, // Added Employee No
-                    receivingDate: document.getElementById('receiving-date').value,
-                    deviceType: document.getElementById('device-type').value,
-                    makeModel: document.getElementById('make-model').value,
-                    imei: document.getElementById('imei').value,
-                    serialNumber: document.getElementById('serial-number').value,
-                    assetTag: document.getElementById('asset-tag').value,
-                    phoneNumber: document.getElementById('phone-number').value,
-                    description: document.getElementById('description').value,
-                    accessories: {
-                        chargerCable: document.getElementById('acc-charger-cable').checked,
-                        powerAdapter: document.getElementById('acc-power-adapter').checked,
-                        case: document.getElementById('acc-case').checked,
-                        sim: document.getElementById('acc-sim').checked,
-                        headphones: document.getElementById('acc-headphones').checked,
-                        stylus: document.getElementById('acc-stylus').checked
-                    }
-                };
-                
-                localStorage.setItem('assetFormData', JSON.stringify(formData));
-            }
-
-            // Load form data from localStorage
-            function loadFormData() {
-                const savedData = localStorage.getItem('assetFormData');
-                if (savedData) {
-                    const formData = JSON.parse(savedData);
-                    
-                    document.getElementById('employee-name').value = formData.employeeName || '';
-                    document.getElementById('employee-no').value = formData.employeeNo || ''; // Added Employee No
-                    document.getElementById('receiving-date').value = formData.receivingDate || new Date().toISOString().split('T')[0];
-                    document.getElementById('device-type').value = formData.deviceType || '';
-                    document.getElementById('make-model').value = formData.makeModel || '';
-                    document.getElementById('imei').value = formData.imei || '';
-                    document.getElementById('serial-number').value = formData.serialNumber || '';
-                    document.getElementById('asset-tag').value = formData.assetTag || '';
-                    document.getElementById('phone-number').value = formData.phoneNumber || '';
-                    document.getElementById('description').value = formData.description || '';
-                    
-                    // Set checkbox states
-                    if (formData.accessories) {
-                        document.getElementById('acc-charger-cable').checked = formData.accessories.chargerCable || false;
-                        document.getElementById('acc-power-adapter').checked = formData.accessories.powerAdapter || false;
-                        document.getElementById('acc-case').checked = formData.accessories.case || false;
-                        document.getElementById('acc-sim').checked = formData.accessories.sim || false;
-                        document.getElementById('acc-headphones').checked = formData.accessories.headphones || false;
-                        document.getElementById('acc-stylus').checked = formData.accessories.stylus || false;
+                    if (stfScale >= 90) {
+                        let mbc = parseNum(cData[map.mbc]);
+                        let cbVal = parseNum(cData[map.cb]);
+                        custBonus = getCustMatrix(mbc, cbVal);
+                    } else {
+                        note = "<90% STF";
                     }
                 }
-            }
 
-            // Auto-save form data when fields change
-            form.addEventListener('input', () => {
-                saveFormData();
+                // 4. Commission
+                let cmData = idxComm[empID] || {};
+                let comm = parseNum(cmData[map.comm]);
+
+                store.calculatedResults.push({
+                    SalesUnit: empID,
+                    Name: empName,
+                    Division: division,
+                    TargetFulfillment: stf, // Raw value from file
+                    Turnover: turnover,
+                    PctMBC: valPctMbc,
+                    PctCB: valPctCb,
+                    SeniorityBonus: senBonus,
+                    Commission: comm,
+                    STFBonus: stfBonus,
+                    CustBonus: custBonus,
+                    Total: senBonus + stfBonus + custBonus + comm,
+                    Notes: note
+                });
             });
 
-            // Load saved form data on page load
-            loadFormData();
-        });
+            renderPreview();
+        }
+
+        function createIndex(data, idCol) {
+            let idx = {};
+            if(!data || data.length === 0) return idx;
+            let keys = Object.keys(data[0]);
+            let keyToUse = keys.includes(idCol) ? idCol : keys[0];
+            data.forEach(row => {
+                let k = String(row[keyToUse] || "").trim();
+                if(k) idx[k] = row;
+            });
+            return idx;
+        }
+
+        function parseNum(val) {
+            if (!val) return 0;
+            if (typeof val === 'number') return val;
+            let v = val.toString().replace(/[^0-9.-]/g, '');
+            return parseFloat(v) || 0;
+        }
+
+        function getMonthsDiff(d1, d2) {
+            let start = typeof d1 === 'number' ? new Date((d1 - 25569)*86400*1000) : new Date(d1);
+            if (isNaN(start)) return 0;
+            let months = (d2.getFullYear() - start.getFullYear()) * 12;
+            months -= start.getMonth();
+            months += d2.getMonth();
+            return months >= 0 ? months + 1 : 0;
+        }
+
+        function getMatrixBonus(stf, turn) {
+            let col = 0;
+            if (turn >= 131000) col = 3;
+            else if (turn >= 111000) col = 2;
+            else if (turn >= 91000) col = 1;
+
+            if (stf >= 121) return [1500, 2000, 2500, 0][col];
+            if (stf >= 116) return [1250, 1750, 2250, 2400][col];
+            if (stf >= 110) return [1000, 1500, 2000, 2250][col];
+            if (stf >= 105) return [750, 1250, 1500, 1750][col];
+            return [500, 1000, 1250, 1500][col];
+        }
+
+        function getCustMatrix(mbc, cb) {
+            const matrix = {
+                30: [1000, 1250, 1500],
+                35: [1100, 1350, 1600],
+                40: [1200, 1500, 1700],
+                45: [1300, 1650, 2000],
+                50: [1400, 1750, 2500],
+                55: [1500, 2000, 3000]
+            };
+            let rowKey = 0;
+            [55, 50, 45, 40, 35, 30].some(k => { if (mbc > k) { rowKey = k; return true; } });
+            if (rowKey === 0) return 0;
+
+            let cIdx = 0;
+            if (cb >= 4) cIdx = 2;
+            else if (cb >= 3) cIdx = 1;
+            else if (cb >= 2) cIdx = 0;
+            else return 0;
+            return matrix[rowKey][cIdx];
+        }
+
+        function renderPreview() {
+            const tbody = document.getElementById('preview-body');
+            tbody.innerHTML = "";
+            document.getElementById('step-preview').classList.remove('hidden');
+
+            store.calculatedResults.slice(0, 10).forEach(r => {
+                const tr = document.createElement('tr');
+                
+                // Format Percentages for display
+                let dispSTF = (typeof r.TargetFulfillment === 'number' && r.TargetFulfillment < 5) 
+                    ? (r.TargetFulfillment * 100).toFixed(1) + '%' 
+                    : r.TargetFulfillment;
+                    
+                let dispPctMBC = (typeof r.PctMBC === 'number' && r.PctMBC < 5) 
+                    ? (r.PctMBC * 100).toFixed(1) + '%' 
+                    : r.PctMBC;
+
+                let dispPctCB = (typeof r.PctCB === 'number' && r.PctCB < 5) 
+                    ? (r.PctCB * 100).toFixed(1) + '%' 
+                    : r.PctCB;
+
+                tr.innerHTML = `
+                    <td class="table-cell font-medium">${r.SalesUnit}</td>
+                    <td class="table-cell text-gray-700">${r.Name}</td>
+                    <td class="table-cell text-gray-500">${r.Division}</td>
+                    <td class="table-cell text-right">${dispSTF}</td>
+                    <td class="table-cell text-right">${fmtMoney(r.Turnover)}</td>
+                    <td class="table-cell text-right">${dispPctMBC}</td>
+                    <td class="table-cell text-right">${dispPctCB}</td>
+                    <td class="table-cell text-right">${fmtMoney(r.SeniorityBonus)}</td>
+                    <td class="table-cell text-right">${fmtMoney(r.Commission)}</td>
+                    <td class="table-cell text-right">${fmtMoney(r.STFBonus)}</td>
+                    <td class="table-cell text-right">${fmtMoney(r.CustBonus)}</td>
+                    <td class="table-cell text-right font-bold text-red-600">${fmtMoney(r.Total)}</td>
+                    <td class="table-cell text-xs text-gray-400 italic">${r.Notes}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function fmtMoney(num) {
+            return new Intl.NumberFormat('en-AE', { style: 'decimal', minimumFractionDigits: 2 }).format(num);
+        }
+
+        function downloadExcel() {
+            if (store.calculatedResults.length === 0) return;
+            const ws = XLSX.utils.json_to_sheet(store.calculatedResults);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Payroll Data");
+            XLSX.writeFile(wb, `Wurth_Bonus_Calc_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
     </script>
 </body>
 </html>
