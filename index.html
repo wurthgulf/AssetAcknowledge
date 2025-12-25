@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Würth Bonus Processor v2.3</title>
+    <title>Würth Bonus Processor v2.8</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -28,8 +28,10 @@
             border-radius: 50%;
             font-weight: bold;
         }
-        .table-header { @apply px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider bg-gray-100 border-b; }
+        .table-header { @apply px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider bg-gray-100 border-b sticky top-0 z-10; }
         .table-cell { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-b border-gray-100; }
+        /* Scrollable table container */
+        .table-container { max-height: 500px; overflow-y: auto; }
     </style>
 </head>
 <body class="bg-slate-100 min-h-screen pb-20">
@@ -39,7 +41,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-red-600 text-2xl font-extrabold mr-2">WÜRTH</span>
-                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.3</span>
+                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.8</span>
                 </div>
             </div>
         </div>
@@ -119,6 +121,11 @@
                             <label class="block text-sm text-gray-600 mb-1">Joining Date</label>
                             <select id="map-join-date" class="w-full border p-2 rounded text-sm bg-white"></select>
                         </div>
+                        <div class="bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
+                             <label class="block text-xs font-bold text-yellow-800 mb-1">Optional: Annual Consecutive Success Bonus</label>
+                             <label class="block text-xs text-gray-600 mb-1">Previous Streak / Joined Year</label>
+                             <select id="map-streak" class="w-full border p-2 rounded text-sm bg-white"></select>
+                        </div>
 
                         <h3 class="font-bold text-gray-800 border-b pb-2 pt-4">Commission File Logic</h3>
                         <div>
@@ -131,7 +138,7 @@
                         <h3 class="font-bold text-gray-800 border-b pb-2">Sales Performance Logic</h3>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-sm text-gray-600 mb-1">Turnover (AED)</label>
+                                <label class="block text-sm text-gray-600 mb-1">Monthly Sales (AED)</label>
                                 <select id="map-turnover" class="w-full border p-2 rounded text-sm bg-white"></select>
                             </div>
                             <div>
@@ -193,7 +200,7 @@
                 </button>
             </div>
             
-            <div class="overflow-x-auto p-6">
+            <div class="overflow-x-auto p-6 table-container">
                 <table class="min-w-full divide-y divide-gray-200" id="preview-table">
                     <thead>
                         <tr>
@@ -201,13 +208,12 @@
                             <th class="table-header">Name</th>
                             <th class="table-header">Division</th>
                             <th class="table-header text-right">Target Fulfillment</th>
-                            <th class="table-header text-right">Turnover</th>
-                            <th class="table-header text-right">%MBC</th>
-                            <th class="table-header text-right">%CB</th>
-                            <th class="table-header text-right">Seniority</th>
+                            <th class="table-header text-right">Monthly Sales</th>
+                            <th class="table-header text-right">Seniority Bonus</th>
                             <th class="table-header text-right">Commission</th>
                             <th class="table-header text-right">STF Bonus</th>
                             <th class="table-header text-right">Cust Bonus</th>
+                            <th class="table-header text-right">Annual Consecutive Success Bonus</th>
                             <th class="table-header text-right text-red-600 font-bold">Total Payout</th>
                             <th class="table-header">Notes</th>
                         </tr>
@@ -215,7 +221,7 @@
                     <tbody class="bg-white divide-y divide-gray-200" id="preview-body">
                         </tbody>
                 </table>
-                <p class="text-xs text-gray-400 mt-4 text-center">* Preview showing first 10 rows only. Download full file to see all data.</p>
+                <p class="text-xs text-gray-400 mt-4 text-center" id="preview-footer">* Displaying ALL calculated rows.</p>
             </div>
         </div>
 
@@ -277,6 +283,7 @@
             populateSelect('map-id', store.headers.hr);
             populateSelect('map-name', store.headers.hr);
             populateSelect('map-join-date', store.headers.hr);
+            populateSelect('map-streak', store.headers.hr); // Optional streak column
             
             // Sales File
             populateSelect('map-turnover', store.headers.sales);
@@ -299,7 +306,8 @@
             autoMap('map-name', ['sales name', 'employee name', 'name']);
             autoMap('map-join-date', ['joined', 'date', 'start']);
             
-            autoMap('map-turnover', ['turnover', 'sales', 'revenue']);
+            // Updated to prefer "Monthly Sales" specifically
+            autoMap('map-turnover', ['monthly sales', 'sales', 'turnover']);
             autoMap('map-stf', ['fulfillment', 'target fulfillment', 'stf']);
             
             autoMap('map-commission', ['commission', 'incentive']);
@@ -310,9 +318,11 @@
             autoMap('map-pct-mbc', ['%mbc']);
             autoMap('map-pct-cb', ['%cb']);
             
-            // Updated Logic: Check for 'New' and 'React' specifically
             autoMap('map-new-cust', ['new after qc', 'new customers']);
             autoMap('map-react-cust', ['react after qc', 'reactivated']);
+            
+            // Updated to prefer "Joined Year" as default
+            autoMap('map-streak', ['joined year', 'streak', 'joined']);
         }
 
         function populateSelect(id, options) {
@@ -344,6 +354,7 @@
                 id: document.getElementById('map-id').value,
                 name: document.getElementById('map-name').value,
                 joinDate: document.getElementById('map-join-date').value,
+                streak: document.getElementById('map-streak').value, // Optional
                 turnover: document.getElementById('map-turnover').value,
                 stf: document.getElementById('map-stf').value,
                 comm: document.getElementById('map-commission').value,
@@ -374,20 +385,19 @@
 
                 let empName = map.name ? (row[map.name] || "") : "";
                 
-                // 1. Tenure
+                // 1. Tenure (Exact Month Calculation)
                 let joinDateStr = row[map.joinDate];
                 let monthsWorked = getMonthsDiff(joinDateStr, processDate);
-                let yearsWorked = monthsWorked / 12;
                 
-                // Seniority Bonus
+                // STRICT Seniority Logic (Months based)
                 let senBonus = 0;
-                if (monthsWorked >= 13) {
-                    if (yearsWorked >= 12) senBonus = 4000;
-                    else if (yearsWorked >= 9) senBonus = 3000;
-                    else if (yearsWorked >= 6) senBonus = 2000;
-                    else if (yearsWorked >= 3) senBonus = 1000;
-                    else if (yearsWorked >= 1) senBonus = 500;
-                }
+                let level = "S6";
+                if (monthsWorked >= 144) { senBonus = 4000; level = "S1"; }
+                else if (monthsWorked >= 108) { senBonus = 3000; level = "S2"; }
+                else if (monthsWorked >= 72) { senBonus = 2000; level = "S3"; }
+                else if (monthsWorked >= 36) { senBonus = 1000; level = "S4"; }
+                else if (monthsWorked >= 13) { senBonus = 500; level = "S5"; }
+                // Else < 13 months, Bonus 0 (Level S6)
 
                 // 2. Sales Data (STF)
                 let sData = idxSales[empID] || {};
@@ -400,8 +410,12 @@
                 if (stf < 5 && stf > 0) stfScale = stf * 100;
                 
                 if (stfScale >= 100) {
-                    if (stfScale >= 121 && turnover >= 131000) stfBonus = turnover * 0.02;
-                    else stfBonus = getMatrixBonus(stfScale, turnover);
+                    // Check Special "2%" Rule
+                    if (stfScale >= 121 && turnover >= 131000) {
+                        stfBonus = turnover * 0.02; // 2% of Turnover
+                    } else {
+                        stfBonus = getMatrixBonus(stfScale, turnover);
+                    }
                 }
 
                 // 3. Customer Bonus & Extra Fields
@@ -414,7 +428,7 @@
                 let note = "";
 
                 if (monthsWorked <= 7) {
-                    // New Emp logic: Summing TWO columns now
+                    // New Emp logic: Summing TWO columns
                     let nc = parseNum(cData[map.newCust]); 
                     let rc = parseNum(cData[map.reactCust]);
                     let totalNew = nc + rc;
@@ -441,20 +455,36 @@
                 let cmData = idxComm[empID] || {};
                 let comm = parseNum(cmData[map.comm]);
 
+                // 5. Annual Consecutive Success Bonus (Optional)
+                let streakAccrual = 0;
+                if (map.streak && row[map.streak] !== undefined) {
+                    let prevStreak = parseNum(row[map.streak]);
+                    let currentStreak = 0;
+                    if (stfScale >= 100) {
+                        currentStreak = prevStreak + 1;
+                        streakAccrual = getStreakBonus(currentStreak);
+                    } else {
+                        currentStreak = 0; // Reset
+                    }
+                    if(streakAccrual > 0) note += ` | Success Bonus M${currentStreak}: +${streakAccrual}`;
+                }
+
                 store.calculatedResults.push({
                     SalesUnit: empID,
                     Name: empName,
                     Division: division,
                     TargetFulfillment: stf,
-                    Turnover: turnover,
-                    PctMBC: valPctMbc,
-                    PctCB: valPctCb,
+                    "Monthly Sales": turnover, // Renamed key for export clarity
                     SeniorityBonus: senBonus,
                     Commission: comm,
                     STFBonus: stfBonus,
                     CustBonus: custBonus,
-                    Total: senBonus + stfBonus + custBonus + comm,
-                    Notes: note
+                    "Annual Consecutive Success Bonus": streakAccrual, 
+                    Total: senBonus + stfBonus + custBonus + comm, 
+                    Notes: note,
+                    // Hidden fields for export
+                    PctMBC: valPctMbc,
+                    PctCB: valPctCb
                 });
             });
 
@@ -486,7 +516,7 @@
             let months = (d2.getFullYear() - start.getFullYear()) * 12;
             months -= start.getMonth();
             months += d2.getMonth();
-            return months >= 0 ? months + 1 : 0;
+            return months >= 0 ? months + 1 : 0; // +1 to include current month
         }
 
         function getMatrixBonus(stf, turn) {
@@ -495,7 +525,7 @@
             else if (turn >= 111000) col = 2;
             else if (turn >= 91000) col = 1;
 
-            if (stf >= 121) return [1500, 2000, 2500, 0][col];
+            if (stf >= 121) return [1500, 2000, 2500, 0][col]; // 0 because 2% rule handled in main loop
             if (stf >= 116) return [1250, 1750, 2250, 2400][col];
             if (stf >= 110) return [1000, 1500, 2000, 2250][col];
             if (stf >= 105) return [750, 1250, 1500, 1750][col];
@@ -522,40 +552,44 @@
             else return 0;
             return matrix[rowKey][cIdx];
         }
+        
+        function getStreakBonus(month) {
+            // Months 1,2 -> 0
+            if (month < 3) return 0;
+            // Lookup table
+            const table = {
+                3: 200, 4: 300, 5: 400, 6: 600, 
+                7: 700, 8: 800, 9: 900, 10: 1000, 
+                11: 1500, 12: 2000
+            };
+            if (month >= 12) return 2000;
+            return table[month] || 0;
+        }
 
         function renderPreview() {
             const tbody = document.getElementById('preview-body');
             tbody.innerHTML = "";
             document.getElementById('step-preview').classList.remove('hidden');
 
-            store.calculatedResults.slice(0, 10).forEach(r => {
+            // --- CHANGED: Removed .slice(0,10) to show ALL rows ---
+            store.calculatedResults.forEach(r => {
                 const tr = document.createElement('tr');
                 
-                // Format Percentages for display
                 let dispSTF = (typeof r.TargetFulfillment === 'number' && r.TargetFulfillment < 5) 
                     ? (r.TargetFulfillment * 100).toFixed(1) + '%' 
                     : r.TargetFulfillment;
-                    
-                let dispPctMBC = (typeof r.PctMBC === 'number' && r.PctMBC < 5) 
-                    ? (r.PctMBC * 100).toFixed(1) + '%' 
-                    : r.PctMBC;
-
-                let dispPctCB = (typeof r.PctCB === 'number' && r.PctCB < 5) 
-                    ? (r.PctCB * 100).toFixed(1) + '%' 
-                    : r.PctCB;
 
                 tr.innerHTML = `
                     <td class="table-cell font-medium">${r.SalesUnit}</td>
                     <td class="table-cell text-gray-700">${r.Name}</td>
                     <td class="table-cell text-gray-500">${r.Division}</td>
                     <td class="table-cell text-right">${dispSTF}</td>
-                    <td class="table-cell text-right">${fmtMoney(r.Turnover)}</td>
-                    <td class="table-cell text-right">${dispPctMBC}</td>
-                    <td class="table-cell text-right">${dispPctCB}</td>
+                    <td class="table-cell text-right">${fmtMoney(r["Monthly Sales"])}</td>
                     <td class="table-cell text-right">${fmtMoney(r.SeniorityBonus)}</td>
                     <td class="table-cell text-right">${fmtMoney(r.Commission)}</td>
                     <td class="table-cell text-right">${fmtMoney(r.STFBonus)}</td>
                     <td class="table-cell text-right">${fmtMoney(r.CustBonus)}</td>
+                    <td class="table-cell text-right text-blue-600">${fmtMoney(r["Annual Consecutive Success Bonus"])}</td>
                     <td class="table-cell text-right font-bold text-red-600">${fmtMoney(r.Total)}</td>
                     <td class="table-cell text-xs text-gray-400 italic">${r.Notes}</td>
                 `;
