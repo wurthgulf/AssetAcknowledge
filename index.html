@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Würth Bonus Processor v2.2</title>
+    <title>Würth Bonus Processor v2.3</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -39,7 +39,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-red-600 text-2xl font-extrabold mr-2">WÜRTH</span>
-                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.2</span>
+                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.3</span>
                 </div>
             </div>
         </div>
@@ -163,8 +163,12 @@
                                 <select id="map-pct-cb" class="w-full border p-2 rounded text-sm bg-white"></select>
                             </div>
                             <div>
-                                <label class="block text-sm text-gray-600 mb-1">New + React (Count)</label>
-                                <select id="map-new-cust" class="w-full border p-2 rounded text-sm bg-white"></select>
+                                <label class="block text-sm text-red-600 font-bold mb-1">New Cust (After QC)</label>
+                                <select id="map-new-cust" class="w-full border p-2 rounded text-sm bg-white border-red-200"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-red-600 font-bold mb-1">React Cust (After QC)</label>
+                                <select id="map-react-cust" class="w-full border p-2 rounded text-sm bg-white border-red-200"></select>
                             </div>
                         </div>
                     </div>
@@ -285,6 +289,7 @@
             populateSelect('map-mbc', store.headers.cust);
             populateSelect('map-cb', store.headers.cust);
             populateSelect('map-new-cust', store.headers.cust);
+            populateSelect('map-react-cust', store.headers.cust);
             populateSelect('map-division', store.headers.cust);
             populateSelect('map-pct-mbc', store.headers.cust);
             populateSelect('map-pct-cb', store.headers.cust);
@@ -304,7 +309,10 @@
             autoMap('map-division', ['division', 'sector']);
             autoMap('map-pct-mbc', ['%mbc']);
             autoMap('map-pct-cb', ['%cb']);
-            autoMap('map-new-cust', ['new after qc', 'new']);
+            
+            // Updated Logic: Check for 'New' and 'React' specifically
+            autoMap('map-new-cust', ['new after qc', 'new customers']);
+            autoMap('map-react-cust', ['react after qc', 'reactivated']);
         }
 
         function populateSelect(id, options) {
@@ -342,6 +350,7 @@
                 mbc: document.getElementById('map-mbc').value,
                 cb: document.getElementById('map-cb').value,
                 newCust: document.getElementById('map-new-cust').value,
+                reactCust: document.getElementById('map-react-cust').value,
                 division: document.getElementById('map-division').value,
                 pctMbc: document.getElementById('map-pct-mbc').value,
                 pctCb: document.getElementById('map-pct-cb').value
@@ -383,12 +392,10 @@
                 // 2. Sales Data (STF)
                 let sData = idxSales[empID] || {};
                 let turnover = parseNum(sData[map.turnover]);
-                let stf = parseNum(sData[map.stf]); // Target Fulfillment
+                let stf = parseNum(sData[map.stf]); 
 
                 let stfBonus = 0;
-                // Note: Assuming STF in file is e.g. 1.05 for 105%. Convert to 105 scale
-                // If the file has 1.05, we multiply by 100. If it has 105, we keep 105.
-                // Heuristic: if value is < 5, assume decimal percentage.
+                // Handling Percentage formats
                 let stfScale = stf;
                 if (stf < 5 && stf > 0) stfScale = stf * 100;
                 
@@ -407,14 +414,12 @@
                 let note = "";
 
                 if (monthsWorked <= 7) {
-                    // New Emp logic (simplified for new + react)
-                    // Note: If you need to map "React" separately, we can add that back. 
-                    // Assuming "NewCust" column might contain total or we use just one for now.
+                    // New Emp logic: Summing TWO columns now
                     let nc = parseNum(cData[map.newCust]); 
-                    // For precise new vs react logic, ensure both cols are mapped. 
-                    // Currently using simplified mapping based on previous request.
+                    let rc = parseNum(cData[map.reactCust]);
+                    let totalNew = nc + rc;
                     
-                    if (nc >= 6) {
+                    if (totalNew >= 6) {
                          if (monthsWorked >= 5 && monthsWorked <= 7) {
                             if (stfScale >= 90) custBonus = 1500;
                             else note = "New Emp: <90% STF";
@@ -440,7 +445,7 @@
                     SalesUnit: empID,
                     Name: empName,
                     Division: division,
-                    TargetFulfillment: stf, // Raw value from file
+                    TargetFulfillment: stf,
                     Turnover: turnover,
                     PctMBC: valPctMbc,
                     PctCB: valPctCb,
