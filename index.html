@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Würth Bonus Processor v2.8</title>
+    <title>Würth Bonus Processor v2.9</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -30,7 +30,6 @@
         }
         .table-header { @apply px-4 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider bg-gray-100 border-b sticky top-0 z-10; }
         .table-cell { @apply px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-b border-gray-100; }
-        /* Scrollable table container */
         .table-container { max-height: 500px; overflow-y: auto; }
     </style>
 </head>
@@ -41,7 +40,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <span class="text-red-600 text-2xl font-extrabold mr-2">WÜRTH</span>
-                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.8</span>
+                    <span class="text-gray-600 font-semibold text-lg">| Sales Compensation Engine v2.9</span>
                 </div>
             </div>
         </div>
@@ -306,7 +305,6 @@
             autoMap('map-name', ['sales name', 'employee name', 'name']);
             autoMap('map-join-date', ['joined', 'date', 'start']);
             
-            // Updated to prefer "Monthly Sales" specifically
             autoMap('map-turnover', ['monthly sales', 'sales', 'turnover']);
             autoMap('map-stf', ['fulfillment', 'target fulfillment', 'stf']);
             
@@ -321,7 +319,6 @@
             autoMap('map-new-cust', ['new after qc', 'new customers']);
             autoMap('map-react-cust', ['react after qc', 'reactivated']);
             
-            // Updated to prefer "Joined Year" as default
             autoMap('map-streak', ['joined year', 'streak', 'joined']);
         }
 
@@ -388,6 +385,7 @@
                 // 1. Tenure (Exact Month Calculation)
                 let joinDateStr = row[map.joinDate];
                 let monthsWorked = getMonthsDiff(joinDateStr, processDate);
+                let notesList = [];
                 
                 // STRICT Seniority Logic (Months based)
                 let senBonus = 0;
@@ -397,7 +395,8 @@
                 else if (monthsWorked >= 72) { senBonus = 2000; level = "S3"; }
                 else if (monthsWorked >= 36) { senBonus = 1000; level = "S4"; }
                 else if (monthsWorked >= 13) { senBonus = 500; level = "S5"; }
-                // Else < 13 months, Bonus 0 (Level S6)
+                
+                notesList.push(`Tenure: ${monthsWorked}m (${level})`);
 
                 // 2. Sales Data (STF)
                 let sData = idxSales[empID] || {};
@@ -413,9 +412,14 @@
                     // Check Special "2%" Rule
                     if (stfScale >= 121 && turnover >= 131000) {
                         stfBonus = turnover * 0.02; // 2% of Turnover
+                        notesList.push("STF: 2% Special Rule");
                     } else {
                         stfBonus = getMatrixBonus(stfScale, turnover);
+                        // notesList.push("STF: Matrix Qualified"); 
                     }
+                } else {
+                    if (sData[map.stf] !== undefined) notesList.push("STF < 100%");
+                    else notesList.push("STF Data Missing");
                 }
 
                 // 3. Customer Bonus & Extra Fields
@@ -425,7 +429,6 @@
                 let valPctCb = map.pctCb ? (cData[map.pctCb] || "") : "";
                 
                 let custBonus = 0;
-                let note = "";
 
                 if (monthsWorked <= 7) {
                     // New Emp logic: Summing TWO columns
@@ -435,19 +438,26 @@
                     
                     if (totalNew >= 6) {
                          if (monthsWorked >= 5 && monthsWorked <= 7) {
-                            if (stfScale >= 90) custBonus = 1500;
-                            else note = "New Emp: <90% STF";
+                            if (stfScale >= 90) {
+                                custBonus = 1500;
+                                notesList.push("New Emp: Qualified");
+                            }
+                            else notesList.push("New Emp: Failed STF Gate (<90%)");
                         } else {
                             custBonus = 1500;
+                            notesList.push("New Emp: Qualified");
                         }
+                    } else {
+                        notesList.push(`New Emp: Target Missed (${totalNew} < 6)`);
                     }
                 } else {
                     if (stfScale >= 90) {
                         let mbc = parseNum(cData[map.mbc]);
                         let cbVal = parseNum(cData[map.cb]);
                         custBonus = getCustMatrix(mbc, cbVal);
+                        if (custBonus === 0) notesList.push("Cust Bonus: Matrix Result 0");
                     } else {
-                        note = "<90% STF";
+                        notesList.push("Cust Bonus: Failed STF Gate (<90%)");
                     }
                 }
 
@@ -463,10 +473,11 @@
                     if (stfScale >= 100) {
                         currentStreak = prevStreak + 1;
                         streakAccrual = getStreakBonus(currentStreak);
+                        if (streakAccrual > 0) notesList.push(`Streak M${currentStreak} (+${streakAccrual})`);
+                        // else notesList.push(`Streak M${currentStreak} (No Payout)`);
                     } else {
-                        currentStreak = 0; // Reset
+                        if (prevStreak > 0) notesList.push("Streak Reset (STF < 100%)");
                     }
-                    if(streakAccrual > 0) note += ` | Success Bonus M${currentStreak}: +${streakAccrual}`;
                 }
 
                 store.calculatedResults.push({
@@ -474,14 +485,14 @@
                     Name: empName,
                     Division: division,
                     TargetFulfillment: stf,
-                    "Monthly Sales": turnover, // Renamed key for export clarity
+                    "Monthly Sales": turnover, 
                     SeniorityBonus: senBonus,
                     Commission: comm,
                     STFBonus: stfBonus,
                     CustBonus: custBonus,
                     "Annual Consecutive Success Bonus": streakAccrual, 
                     Total: senBonus + stfBonus + custBonus + comm, 
-                    Notes: note,
+                    Notes: notesList.join(" | "),
                     // Hidden fields for export
                     PctMBC: valPctMbc,
                     PctCB: valPctCb
@@ -525,7 +536,7 @@
             else if (turn >= 111000) col = 2;
             else if (turn >= 91000) col = 1;
 
-            if (stf >= 121) return [1500, 2000, 2500, 0][col]; // 0 because 2% rule handled in main loop
+            if (stf >= 121) return [1500, 2000, 2500, 0][col]; 
             if (stf >= 116) return [1250, 1750, 2250, 2400][col];
             if (stf >= 110) return [1000, 1500, 2000, 2250][col];
             if (stf >= 105) return [750, 1250, 1500, 1750][col];
@@ -571,7 +582,6 @@
             tbody.innerHTML = "";
             document.getElementById('step-preview').classList.remove('hidden');
 
-            // --- CHANGED: Removed .slice(0,10) to show ALL rows ---
             store.calculatedResults.forEach(r => {
                 const tr = document.createElement('tr');
                 
